@@ -201,9 +201,16 @@ well-named methods: [bringToTop][btt], [sendToBack][stb], [moveUp][mu],
 
 ### Inter-Scene communications
 
-#### data registry
-#### function calls
-#### signals
+We now know what a scene is, how to control what state it's in, and can manage
+the order in which scenes are drawn. Now to really unlock the power in making
+use of multiple scenes let's talk about how to make them work together.
+
+There are _many_ ways to tackle this but I'm going to summarize the three that
+I'm guessing will be the most common.
+
+#### The Data Registry
+#### Function Calls
+#### Signals
 
 ## Additional Reading
 
