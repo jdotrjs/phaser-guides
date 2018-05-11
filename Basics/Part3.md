@@ -201,6 +201,8 @@ well-named methods: [bringToTop][btt], [sendToBack][stb], [moveUp][mu],
 
 ### Inter-Scene communications
 
+TODO: provide an example project using each of the three communication methods
+
 We now know what a scene is, how to control what state it's in, and can manage
 the order in which scenes are drawn. Now to really unlock the power in making
 use of multiple scenes let's talk about how to make them work together.
@@ -209,10 +211,101 @@ There are _many_ ways to tackle this but I'm going to summarize the three that
 I'm guessing will be the most common.
 
 #### The Data Registry
+
+- TODO: verify globalness
+- TODO: verify button press 
+- TODO: verify code
+
+The `registry` attribute in your scene offers access to a globally shared
+[DataManager][dm]. One of its key features is that you can subscribe to
+events when the data that it stores is changed and, since it's shared, it's
+trivially easy to build an ersatz scene-to-scene communication system. In
+practice this would look something like:
+
+```javascript
+// In SceneA
+
+// A callback to handle mouse down events on UI elements
+handleButtonPress(pointer, buttonObject) {
+  this.registry.set(`${buttonObject.target}:toggle`, !buttonObject.value())
+}
+
+// In SceneB
+
+init() {
+  ...
+  // define a mapping between data registry keys and behaviors we want to take
+  this.handlers = {
+    'toggle:pause': this.pause,
+    'toggle:settings': this.settings,
+  }
+
+  // subscribe for changes to the global data registry
+  this.registry.events.on('changedata', this.registryUpdate, this)
+}
+
+// process incoming data changes
+registryUpdate(parent, key, data) {
+  // check if a handler exists for this key
+  if (this.handlers[key]) {
+    // if so, call the associated handler with the incoming data
+    handlers[key](data)
+  }
+}
+```
+
+This approach is certainly not bad and it allows for connecting multiple scenes
+with minimal hassle. My primary complaints are:
+
+- it relies on a global state; the problem here is twofold: that state is
+  mutable by any reader and mutation on any key results in your handler needing
+  to run and check if you got an event you care about
+- if you decide that you want to use a type system like [Flow][flow] or
+  [TypeScript][ts] then there is no good way to maintain safety through the
+  full pipeline
+- the namespace for data keys is shared between everything in your game meaning
+  it's possible to accidentally use the same key for two different purposes.
+
+None of those are terrible but in aggregate it makes using the (bare) data
+registry my least favorite solution for signaling.
+
+[dm]: https://photonstorm.github.io/phaser3-docs/Phaser.Data.DataManager.html
+[flow]: https://flow.org
+[ts]: https://typescript.org
+
 #### Function Calls
+
+A scene is just object which means you can call methods that have been defined
+on it. As a result simply calling functions is a viable way for scenes to
+communicate.
+
+```javascript
+// SceneA
+
+// SceneB
+
+pause(newValue) {
+  if (newValue && this.pausesRemaining) {
+    this.pausesRemaining--
+  }
+
+  if (newValue) {
+    this.scene.pause()
+  } else {
+    this.scene.resume()
+  }
+}
+
+settings(newValue) {
+}
+```
+
 #### Signals
 
 ## Additional Reading
+
+TODO: address that a lot of this information isn't new, point to deeper
+tutorials
 
 - [Just the Basics](https://gamedevacademy.org/phaser-3-tutorial/)
 - [Newsletter Deep Dive, part 1](https://madmimi.com/p/a2dddb)
