@@ -213,8 +213,6 @@ I'm guessing will be the most common.
 #### The Data Registry
 
 - TODO: verify globalness
-- TODO: verify button press 
-- TODO: verify code
 
 The `registry` attribute in your scene offers access to a globally shared
 [DataManager][dm]. One of its key features is that you can subscribe to
@@ -225,9 +223,16 @@ practice this would look something like:
 ```javascript
 // In SceneA
 
-// A callback to handle mouse down events on UI elements
-handleButtonPress(pointer, buttonObject) {
-  this.registry.set(`${buttonObject.target}:toggle`, !buttonObject.value())
+create() {
+  // ...
+  pauseButton.on('pointerdown', function() {
+    pauseButton.toggle()
+    this.registry.set('pause:toggle', buttonObject.value())
+  })
+  settingsButton.on('pointerdown', function() {
+    settingsButton.toggle()
+    this.registry.set('settings:toggle', settingsButton.value())
+  })
 }
 
 // In SceneB
@@ -252,6 +257,14 @@ registryUpdate(parent, key, data) {
     handlers[key](data)
   }
 }
+
+pause(newValue) {
+  // handle pause/unpause event
+}
+
+settings(newValue) {
+  // handle settings open/save/close event
+}
 ```
 
 This approach is certainly not bad and it allows for connecting multiple scenes
@@ -271,7 +284,7 @@ registry my least favorite solution for signaling.
 
 [dm]: https://photonstorm.github.io/phaser3-docs/Phaser.Data.DataManager.html
 [flow]: https://flow.org
-[ts]: https://typescript.org
+[ts]: https://www.typescriptlang.org
 
 #### Function Calls
 
@@ -280,27 +293,86 @@ on it. As a result simply calling functions is a viable way for scenes to
 communicate.
 
 ```javascript
-// SceneA
+// In SceneA
 
-// SceneB
+create() {
+  // ...
+  pauseButton.on('pointerdown', function() {
+    pauseButton.toggle()
+    const sceneB = this.scene.get('SceneB')
+    sceneB.pause(pauseButton.value())
+  })
+
+  settingsButton.on('pointerdown', function() {
+    settingsButton.toggle()
+    const sceneB = this.scene.get('SceneB')
+    sceneB.settings(settingsButton.value())
+  })
+}
+
+// In SceneB
 
 pause(newValue) {
-  if (newValue && this.pausesRemaining) {
-    this.pausesRemaining--
-  }
-
-  if (newValue) {
-    this.scene.pause()
-  } else {
-    this.scene.resume()
-  }
+  // process pause/unpause behavior
 }
 
 settings(newValue) {
+  // process settings dialog open/save/close
 }
 ```
 
-#### Signals
+Using functions we can directly tie an actions to its implementations. It's
+easier to trace code and in the event we want to switch to a typesafe
+javascript stack there are fewer tricks that need to be accomplished to do so.
+
+The major downside here is that we've now tightly coupled our scenes together
+and a changes in one may require corresponding updates in other, non obvious,
+places. Without tooling in place to catch this it's entirely possible that a
+"simple" refactor to clean up your UI scene could totally break your game and
+it wouldn't be obvious until you tried to test that action.
+
+#### Scene Signals
+
+To round out scene communications let's talk about using the scene itself as an
+event emitter. This enables a less tightly coupled integration than using
+functions directly and doesn't run afoul of the issues that come from just
+shoving everything into a global data store with a flat namespace. Because much
+of Phaser runs on signals it should also be pretty similar in feel to the rest
+of your codebase.
+
+```javascript
+// SceneA
+
+create() {
+  // ...
+  pasueButton.on('pointerdown', function() {
+    pauseButton.toggle()
+    this.events.emit('pause', pauseButton.value())
+  }
+
+  settingsButton.on('pointerdown', function() {
+    settingsButton.toggle()
+    this.events.emit('settings', settingsButton.value())
+  })
+}
+
+// SceneB
+
+create() {
+  const sceneA = this.scene.get('SceneA')
+  sceneA.events.on('pause', this.pause, this)
+  sceneA.events.on('settings', this.settings, this)
+}
+
+pause(newValue) {
+  // process pause/unpause behavior
+}
+
+settings(newValue) {
+  // process settings dialog open/save/close
+}
+```
+
 
 ## Additional Reading
 
