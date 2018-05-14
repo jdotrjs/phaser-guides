@@ -8,9 +8,14 @@ partially correct but they're also a very limited view and can lead to missing a
 powerful tool in the battle against complicated code.
 
 This guide is a crash course into what they are, how they work, how to use
-them, and where to learn more.
+them, and where to learn more. I assume a moderate degree of comfort with
+both Javascript and Phaser itself. If you haven't worked through a basic
+"build your first game" tutorial I would suggest reading [this][guide1] or
+[this][guide2] before diving in here.
 
 [sceneref]: https://photonstorm.github.io/phaser3-docs/Phaser.Scene.html
+[guide1]: https://gamedevacademy.org/phaser-3-tutorial/
+[guide2]: https://phaser.io/tutorials/making-your-first-phaser-3-game
 
 ## What is a `Scene`
 
@@ -26,8 +31,8 @@ And that's it.
 Where they get special is that Phaser 3 doesn't place any constraints on how
 many need to be running. This means you can have 0, 1, or as many as you need
 going at once. You can communicate between them and each scene has a z-index
-so you make statements like: "My UI Scene will _always_ be rendered above the
-play Scene which is _always_ above the background Scene."
+so you can make statements like: "My UI Scene will _always_ be rendered above
+the play Scene which is _always_ above the background Scene."
 
 ## How do they work
 
@@ -66,18 +71,19 @@ class SimpleScene extends Phaser.Scene {
 One thing that a `Scene` does not expose is a function to be called during the
 render step. This is an explicit decision in the framework and it means that we
 need to rely on the managing the Scene's display list to put things on the
-screen. That's okay, it's a better approach anyway.
+screen. There are signals emitted before and after the render call if you need
+to take action there but we won't dig into them in this doc.
 
 ### Lifecycle
 
-Now that we've hinted at the scene life cycle lets talk in a bit more detail
-what that looks like. A simplified model is that it has four states it moves
-between: _Create_, _Update Loop_, _Paused_, and _Stopped_. Each transition is
-initiated by a function call and emits a signal that can be listened for if
-you need to take actions on certain transitions.
+Now that we've hinted at the scene lifecycle lets talk in a bit more detail
+what that looks like. A simplified model is that it moves between four states:
+_Create_, _Update Loop_, _Paused_, and _Stopped_. Most transitions are initiated
+by a function call and emit a signal that can be listened for if you need to
+take actions at specific points in tho process.
 
-In the following state diagram functions are in light yellow and emitted
-signals in light orange.
+In the following state diagram functions which initiate a transition  are in
+light yellow and signals emitted are light orange.
 
 <center><img src='assets/part3-lifecycle.png'/></center>
 
@@ -150,12 +156,50 @@ _-> Create_:
 
 The key methods here are `ScenePlugin` methods [start][sp-start] and
 [launch][sp-launch]. Both of these will trigger a scene to move into the
-_Create_ state. `start` additionally moves any current scene into _Stopped_
-whereas `launch` does not impact the currently running scene.
+_Create_ state. `start` additionally moves the current scene into _Stopped_
+whereas `launch` does not impact the currently running scene. (Note: in this
+case "current" references the scene that is the parent of the `ScenePlugin`
+used to start/launch a new scene.)
 
-When calling both of these methods data may be passed into them which will be
-made available to your scene's `init` function. Additional discussion follows
-in the section on inter-scene communication.
+When calling either of these methods data may be passed in which will be made
+available to your scene's `init` and `create` functions. An example of this in
+use follows:
+
+```javascript
+class GamePlay extends Phaser.Scene {
+  constructor(ctorData) {
+    super({ key: 'GamePlay' })
+  }
+
+  init(startData) {
+    if (startData.newGame) {
+      // set up new game data structures
+    } else {
+      // load save
+    }
+
+    // kick off the UI overlay
+    this.scene.launch('GameUI')
+  }
+
+  create(startData) {
+    this.loadPlayer(startData.player)
+  }
+}
+
+// In Menu scene
+
+create() {
+  startGameButton.on('pointerdown', function() {
+    this.scene.start('GamePlay', {
+      newGame: this.newGame.value(),
+      saveSlot: this.saveSlot.value(),
+      player: this.player.value(),
+    })
+  })
+}
+
+```
 
 [sp-start]: https://photonstorm.github.io/phaser3-docs/Phaser.Scenes.ScenePlugin.html#start
 [sp-launch]: https://photonstorm.github.io/phaser3-docs/Phaser.Scenes.ScenePlugin.html#launch
@@ -211,8 +255,6 @@ There are _many_ ways to tackle this but I'm going to summarize the three that
 I'm guessing will be the most common.
 
 #### The Data Registry
-
-- TODO: verify globalness
 
 The `registry` attribute in your scene offers access to a globally shared
 [DataManager][dm]. One of its key features is that you can subscribe to
@@ -325,11 +367,11 @@ Using functions we can directly tie an actions to its implementations. It's
 easier to trace code and in the event we want to switch to a typesafe
 javascript stack there are fewer tricks that need to be accomplished to do so.
 
-The major downside here is that we've now tightly coupled our scenes together
-and a changes in one may require corresponding updates in other, non obvious,
-places. Without tooling in place to catch this it's entirely possible that a
-"simple" refactor to clean up your UI scene could totally break your game and
-it wouldn't be obvious until you tried to test that action.
+A downside here is that we've now tightly coupled our scenes together and
+changes in one may require corresponding updates in other, non obvious, places.
+Without tooling in place to catch this it's entirely possible that a "simple"
+refactor to clean up your UI scene could totally break your game and it
+wouldn't be obvious until you tried to test that action.
 
 #### Scene Signals
 
@@ -373,15 +415,34 @@ settings(newValue) {
 }
 ```
 
+As with all use of signals using them for scene coordination can eaisly create
+a codebase that obscures the link between two bits of code and special care
+should be taken that reliance on them doesn't create an untraceable mess.
+
+#### Summary
+
+In general I start working with signals and fall back to functions if I feel
+that there should be a more obvious link between my scenes. That said, none of
+these options are the right solution for all cases so it's important to
+understand how they work to help make the best call for your game.
 
 ## Additional Reading
 
-TODO: address that a lot of this information isn't new, point to deeper
-tutorials
+In delving into Phaser3 I've gone through a bunch of code and other guides.
+The inspiration for the content here comes largely from how I wish that
+information had been presented to me. To that end it feels important to
+acknowledge the authors who also did a bunch of heavy lifting:
 
-- [Just the Basics](https://gamedevacademy.org/phaser-3-tutorial/)
-- [Newsletter Deep Dive, part 1](https://madmimi.com/p/a2dddb)
-- [Newsletter Deep Dive, part 2](https://madmimi.com/p/860f1c)
+- [Just the Basics](https://gamedevacademy.org/phaser-3-tutorial/)&mdash;
+  For a basic introduction to Phaser and Scenes you should probably start here.
+  The state diagram they include is sufficient for what it is but mostly drove
+  me to build the one in this doc.
+- Newsletter Deep Dive [part 1](https://madmimi.com/p/a2dddb) and
+  [part 2](https://madmimi.com/p/860f1c)&mdash;Everything I didn't learn from
+  staring at code came from these two guides. They go into significantly more
+  detail than I do about scene setup, customization, and less often used
+  features. My goal was explicitly to provide something more approachable than
+  these but less basic than most of the existing guides.
 - The API Docs (for that unstructured learning experience)
   - [Scene](https://photonstorm.github.io/phaser3-docs/Phaser.Scene.html)
   - [Scenes.SceneManager](https://photonstorm.github.io/phaser3-docs/Phaser.Scenes.SceneManager.html)
