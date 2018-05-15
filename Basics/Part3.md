@@ -105,7 +105,31 @@ initial value on everything requiring one.
 
 #### Important attributes
 
-(Maybe worth adding? discuss where various important things live)
+Making a `Scene` dance requires knowing where its control points are. This is
+pretty well documented in [the API docs][scene-docs] but it's probably still
+worth calling out where a few important things live. These attribute paths
+begin with a `this` reference on the assumption your code is in a Scene method.
+If that is not the case it can be subtituted with any variable of type
+`Phaser.Scene` (or a child of it).
+
+| Attribute          | What is it | Docs |
+| ---------          | ---------- | ---- |
+| `this.scene`       | A reference to the `ScenePlugin` object. Contains a bunch of useful methods for managing scene state, layering, etc. | [link][sp-doc] |
+| `this.load`        | Access to the `LoaderPlugin` which can be used to queue fetching of external assets. Typically used in `preload` but can be used outside of it with additional work. | [link][lp-doc] |
+| `this.add`         | Using `GameObjectFactory` it's trivial to create one of the basic Phaser objects, associate it with this scene, and add it to the display list. | [link][gof-doc] |
+| `this.physics.add` | Similar to `.add`, `.physics.add` is used to construct (Arcade) physics enabled variants of a game object and associate it with this scene. Matter and Impact physics systems have similar factories as well. | [link][apf-doc] |
+| `this.anims`       | The globally shared animation manager; used to create or retrieve animations that can be applied to a sprite. | [link][am-doc] |
+| `this.events`      | This is the `EventEmitter` associated with this scene, use it to listen for or publish events. | [link][ee-doc] |
+| `this.sys`         | A catch-all location for plugins and other scene-related behavior. | [link][sys-doc] |
+
+[ee-doc]: https://photonstorm.github.io/phaser3-docs/Phaser.Events.EventEmitter.html
+[sys-doc]: https://photonstorm.github.io/phaser3-docs/Phaser.Scenes.Systems.html
+[sp-doc]: https://photonstorm.github.io/phaser3-docs/Phaser.Scenes.ScenePlugin.html
+[lp-doc]: https://photonstorm.github.io/phaser3-docs/Phaser.Loader.LoaderPlugin.html
+[gof-doc]: https://photonstorm.github.io/phaser3-docs/Phaser.GameObjects.GameObjectFactory.html
+[apf-doc]: https://photonstorm.github.io/phaser3-docs/Phaser.Physics.Arcade.ArcadePhysics.html#add
+[am-doc]: https://photonstorm.github.io/phaser3-docs/Phaser.Animations.AnimationManager.html
+[scene-docs]: https://photonstorm.github.io/phaser3-docs/Phaser.Scene.html
 
 #### Displaying objects
 
@@ -244,8 +268,6 @@ well-named methods: [bringToTop][btt], [sendToBack][stb], [moveUp][mu],
 [mb]: https://photonstorm.github.io/phaser3-docs/Phaser.Scenes.ScenePlugin.html#moveBelow
 
 ### Inter-Scene communications
-
-TODO: provide an example project using each of the three communication methods
 
 We now know what a scene is, how to control what state it's in, and can manage
 the order in which scenes are drawn. Now to really unlock the power in making
