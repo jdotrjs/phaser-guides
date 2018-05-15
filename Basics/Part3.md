@@ -1,30 +1,40 @@
-# Phaser3 Series: Let's Talk About Scenes
+# Phaser 3 Series: Let's Talk About Scenes
 
-Let's talk about [`Scene`][sceneref]. If you're coming from Phaser2 it's easy to
-mistake a this for the older `State` object. If you're just thinking about the
-definition of the word it's easy to view them as a linear sequence of things that
-flow into each other but are generally independent. Both of these comparisons are
+Let's talk about [`Scene`][sceneref]. If you're coming from Phaser 2 it's easy to
+mistake a [`this`](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Operators/this) for the older `State` object. 
+
+If you're just thinking about the definition of the word it's easy to view them as a linear sequence of things that
+flow into each other but are generally independent. 
+
+Both of these comparisons are
 partially correct but they're also a very limited view and can lead to missing a
 powerful tool in the battle against complicated code.
 
 This guide is a crash course into what they are, how they work, how to use
-them, and where to learn more. I assume a moderate degree of comfort with
+them, and where to learn more. 
+
+I assume a moderate degree of comfort with
 both Javascript and Phaser itself. If you haven't worked through a basic
 "build your first game" tutorial I would suggest reading [this][guide1] or
 [this][guide2] before diving in here.
 
+[This][guide3] is also a very interested tutorial, although the architecture is a bit more complex.
+
 [sceneref]: https://photonstorm.github.io/phaser3-docs/Phaser.Scene.html
 [guide1]: https://gamedevacademy.org/phaser-3-tutorial/
 [guide2]: https://phaser.io/tutorials/making-your-first-phaser-3-game
+[guide3]: https://github.com/DoctaCloak/phaser-pet
+
 
 ## What is a `Scene`
 
 A `Scene` in your game is a collection of [`GameObject`][gameobject]s and
-related logic which should be kept together. The objects will be drawn when the
-scene is rendered and its `update` method will get called on every tick of your
-game loop.
+related logic which should be kept together. 
 
-And that's it.
+The objects will be drawn when the
+scene is rendered and its `update` method will get called on every tick of your
+game loop, which is roughly 60 times a second.
+
 
 [gameobject]: https://photonstorm.github.io/phaser3-docs/Phaser.GameObjects.GameObject.html
 
