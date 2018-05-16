@@ -1,4 +1,4 @@
-# Phaser3 Series: Let's Talk About Scenes
+# Phaser 3 Series: Let's Talk About Scenes
 
 Let's talk about [`Scene`][sceneref]. If you're coming from Phaser2 it's easy to
 mistake a this for the older `State` object. If you're just thinking about the

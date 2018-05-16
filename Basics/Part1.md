@@ -1,4 +1,4 @@
-# Phaser3 Series: Dev 102 (part 1)
+# Phaser 3 Series: Dev 102 (part 1)
 
 Most of the tutorials I've seen on Phaser are super focused on teaching one
 new skill or feature. If you already have a strong development background
@@ -59,11 +59,3 @@ functionality within the project. For Phaser games that means I start with:
 Having a consistent approach to identifying where some code or asset should
 live doesn't magically improve your code. Bugs still happen and code is still
 messy but it does remove some of the load of navigating your codebase.
-
-## Principle: Use Good Tools
-
-## Principle: Rule of Three
-
-## Principle: Do One Thing Well
-
-## Principle: Composition over Inheritance
