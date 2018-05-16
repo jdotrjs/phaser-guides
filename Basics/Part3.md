@@ -1,11 +1,11 @@
 # Phaser 3 Series: Let's Talk About Scenes
 
-Let's talk about [`Scene`][sceneref]. If you're coming from Phaser2 it's easy to
-mistake a this for the older `State` object. If you're just thinking about the
-definition of the word it's easy to view them as a linear sequence of things that
-flow into each other but are generally independent. Both of these comparisons are
-partially correct but they're also a very limited view and can lead to missing a
-powerful tool in the battle against complicated code.
+Let's talk about [`Scene`][sceneref]. If you're coming from Phaser 2 it's easy
+to mistake a this for the older `State` object. If you're just thinking about
+the definition of the word it's easy to view them as a linear sequence of
+things that flow into each other but are generally independent. Both of these
+comparisons are partially correct but they're also a very limited view and can
+lead to missing a powerful tool in the battle against complicated code.
 
 This guide is a crash course into what they are, how they work, how to use
 them, and where to learn more. I assume a moderate degree of comfort with
@@ -36,18 +36,19 @@ the play Scene which is _always_ above the background Scene."
 
 ## How do they work
 
-A `Scene` is just a class that extends `Phaser.Scene` and contains a `create`
-method. The Phaser framework has a system that manages all the `Scene`s it
-knows about, tracks which are currently active, maintains the correct layering,
-and tells each to update and render when it should.
+A `Scene` is just a class that extends `Phaser.Scene` and implements one or
+more _lifecycle method_. An instance of that class is then passed to the Phaser
+framework which tracks which are active, maintains the correct layering when
+they're drawn, and initates update and render calls for them.
 
 A super basic scene that logs to the console when its lifecycle methods are
-called would be defined like so:
+called is defined like so:
 
 ```javascript
 class SimpleScene extends Phaser.Scene {
   constructor() {
     super({ key: 'SimpleScene' })
+    console.log('SimpleScene#constructor')
   }
 
   init() {
@@ -68,29 +69,29 @@ class SimpleScene extends Phaser.Scene {
 }
 ```
 
-One thing that a `Scene` does not expose is a function to be called during the
-render step. This is an explicit decision in the framework and it means that we
-need to rely on the managing the Scene's display list to put things on the
+One thing that a `Scene` does not expose is a function automatically called
+during the render step. This is an explicit decision by the framework and it
+means that we need to rely on the Scene's display list to put things on the
 screen. There are signals emitted before and after the render call if you need
 to take action there but we won't dig into them in this doc.
 
 ### Lifecycle
 
-Now that we've hinted at the scene lifecycle lets talk in a bit more detail
-what that looks like. A simplified model is that it moves between four states:
-_Create_, _Update Loop_, _Paused_, and _Stopped_. Most transitions are initiated
-by a function call and emit a signal that can be listened for if you need to
-take actions at specific points in tho process.
+Now that we've hinted at the scene lifecycle lets talk about it in a bit more
+detail. A simplified model is that it moves between four states: _Create_,
+_Update Loop_, _Paused_, and _Stopped_. Most transitions are initiated by a
+function call and emit a signal that can be listened for should you need to
+take action at specific points in the process.
 
-In the following state diagram functions which initiate a transition  are in
-light yellow and signals emitted are light orange.
+We summarize scene state transitions and fired events in the following state
+diagram. Functions which initiate a transition  are in light yellow and
+signals emitted are light orange.
 
 <center><img src='assets/part3-lifecycle.png'/></center>
 
 Additionally the _Create_ and _Update Loop_ states emit several signals and
-will call functions if your scene defines them (as we did in the code sample
-above). Emitted signals are light orange and the functions you can define are
-light green:
+call defined scene lifecycle functions. Emitted signals are light orange and
+the functions you can define are light green:
 
 <center><img src='assets/part3-states.png'/></center>
 
@@ -108,19 +109,19 @@ initial value on everything requiring one.
 Making a `Scene` dance requires knowing where its control points are. This is
 pretty well documented in [the API docs][scene-docs] but it's probably still
 worth calling out where a few important things live. These attribute paths
-begin with a `this` reference on the assumption your code is in a Scene method.
-If that is not the case it can be subtituted with any variable of type
-`Phaser.Scene` (or a child of it).
+begin with a `this` reference on the assumption your code is in a lifecycle
+method. If that is not the case it can be subtituted with any variable
+referencing a `Phaser.Scene` (or a child of it).
 
 | Attribute          | What is it | Docs |
 | ---------          | ---------- | ---- |
 | `this.scene`       | A reference to the `ScenePlugin` object. Contains a bunch of useful methods for managing scene state, layering, etc. | [link][sp-doc] |
-| `this.load`        | Access to the `LoaderPlugin` which can be used to queue fetching of external assets. Typically used in `preload` but can be used outside of it with additional work. | [link][lp-doc] |
-| `this.add`         | Using `GameObjectFactory` it's trivial to create one of the basic Phaser objects, associate it with this scene, and add it to the display list. | [link][gof-doc] |
+| `this.load`        | Access to the `LoaderPlugin` which can be used to queue fetching of external assets. Typically used in `preload` but may also be used outside of it (with additional work). | [link][lp-doc] |
+| `this.add`         | Using `GameObjectFactory` it's trivial to create one of the basic Phaser objects, associate it with this scene, and add it to the display list (if appropriate). | [link][gof-doc] |
 | `this.physics.add` | Similar to `.add`, `.physics.add` is used to construct (Arcade) physics enabled variants of a game object and associate it with this scene. Matter and Impact physics systems have similar factories as well. | [link][apf-doc] |
 | `this.anims`       | The globally shared animation manager; used to create or retrieve animations that can be applied to a sprite. | [link][am-doc] |
 | `this.events`      | This is the `EventEmitter` associated with this scene, use it to listen for or publish events. | [link][ee-doc] |
-| `this.sys`         | A catch-all location for plugins and other scene-related behavior. | [link][sys-doc] |
+| `this.sys`         | A catch-all location for plugins and other scene-related controls. | [link][sys-doc] |
 
 [ee-doc]: https://photonstorm.github.io/phaser3-docs/Phaser.Events.EventEmitter.html
 [sys-doc]: https://photonstorm.github.io/phaser3-docs/Phaser.Scenes.Systems.html
@@ -131,7 +132,7 @@ If that is not the case it can be subtituted with any variable of type
 [am-doc]: https://photonstorm.github.io/phaser3-docs/Phaser.Animations.AnimationManager.html
 [scene-docs]: https://photonstorm.github.io/phaser3-docs/Phaser.Scene.html
 
-#### Displaying objects
+#### Loading and Displaying objects
 
 Let's start with the easy stuff. I mentioned that getting things to be drawn
 as part of a scene is done by adding things to the display list. This is
@@ -140,6 +141,28 @@ handled automatically if using a factory associated with the scene, e.g.,
 in mind that you can also use factories to add [existing][scene-existing-add]
 [objects][arcade-existing-add] as well creating new objects and adding them
 at the same time.
+
+In order to use external assets they need to be loaded before adding them, this
+is generally accomplished by using `this.load` to queue retrieval in the
+`preload()` method. If there are pending loads after it has been called the
+`SceneManager` will not continue the _Create_ flow until all assets have been
+loaded.
+
+```javascript
+class DemoScene extends Phaser.Scene {
+  constructor() {
+    super({ key: 'demo' })
+  }
+
+  preload() {
+    this.load.image('background', 'assets/images/background.png')
+  }
+
+  create() {
+    this.bgImg = this.add.image(0, 0, 'background').setOrigin(0)
+  }
+}
+```
 
 [scene-add]: https://photonstorm.github.io/phaser3-docs/Phaser.Scene.html#add
 [scene-physics-add]: https://photonstorm.github.io/phaser3-docs/Phaser.Physics.Arcade.ArcadePhysics.html#add
