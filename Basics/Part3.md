@@ -38,11 +38,11 @@ the play Scene which is _always_ above the background Scene."
 
 A `Scene` is just a class that extends `Phaser.Scene` and implements one or
 more _lifecycle method_. An instance of that class is then passed to the Phaser
-framework which tracks which are active, maintains the correct layering when
-they're drawn, and initates update and render calls for them.
+framework which tracks what scenes are active, maintains the correct layering
+when they're drawn, and initates update and render calls for them.
 
 A super basic scene that logs to the console when its lifecycle methods are
-called is defined like so:
+called is defined below:
 
 ```javascript
 class SimpleScene extends Phaser.Scene {
@@ -134,19 +134,23 @@ referencing a `Phaser.Scene` (or a child of it).
 
 #### Loading and Displaying objects
 
-Let's start with the easy stuff. I mentioned that getting things to be drawn
-as part of a scene is done by adding things to the display list. This is
-handled automatically if using a factory associated with the scene, e.g.,
-[`scene.add`][scene-add] or [`scene.physics.add`][scene-physics-add]. Keep
-in mind that you can also use factories to add [existing][scene-existing-add]
-[objects][arcade-existing-add] as well creating new objects and adding them
-at the same time.
+Let's start with the easy stuff.
 
-In order to use external assets they need to be loaded before adding them, this
-is generally accomplished by using `this.load` to queue retrieval in the
-`preload()` method. If there are pending loads after it has been called the
-`SceneManager` will not continue the _Create_ flow until all assets have been
-loaded.
+In order to use external assets they need to be loaded first, this is generally
+accomplished by using `this.load` to queue retrieval in the `preload()` method.
+If there are pending loads after it has been called the `SceneManager` will not
+continue the _Create_ flow until all assets have been loaded.
+
+Once you have assets available you can get them displayed by adding them to the
+scene display list. This is handled automatically if using a factory associated
+with the scene, e.g., [`scene.add`][scene-add] or
+[`scene.physics.add`][scene-physics-add]. If there isn't a factory method for
+the object you want to add remember that you can also add
+[existing objects][scene-existing-add]. As with other factory methods there are
+parallel calls in each of the physics systems.
+
+An example of using the scene's loader and object factory to add a background:
+
 
 ```javascript
 class DemoScene extends Phaser.Scene {
@@ -185,7 +189,7 @@ By default the first scene in that list will run. You can control this behavior
 by passing the `autorun` config attribute to the `Phaser.Scene` constructor.
 
 However, sometimes that doesn't work and you need to add a scene at a later
-point in. If that's the case you can call [ScenePlugin#add][sp-add] which make
+point. If that's the case you can call [ScenePlugin#add][sp-add] which make
 the new scene available to use in your game.
 
 If you're done with a scene and need to clean it up for memory conservation
@@ -199,14 +203,17 @@ If you're done with a scene and need to clean it up for memory conservation
 Now that you have scenes available to work with the main question is how to
 control them.
 
+> *Note*: In all cases following the word "current" references the scene that is
+> the parent of the `ScenePlugin` used to change scene state. Additionally most
+> methods used to impact scene state can take a key for the scene to act on or
+> no argument which causes the action to be taken on the "current" scene.
+
 _-> Create_:
 
 The key methods here are `ScenePlugin` methods [start][sp-start] and
 [launch][sp-launch]. Both of these will trigger a scene to move into the
 _Create_ state. `start` additionally moves the current scene into _Stopped_
-whereas `launch` does not impact the currently running scene. (Note: in this
-case "current" references the scene that is the parent of the `ScenePlugin`
-used to start/launch a new scene.)
+whereas `launch` does not impact the currently running scene.
 
 When calling either of these methods data may be passed in which will be made
 available to your scene's `init` and `create` functions. An example of this in
@@ -259,6 +266,11 @@ developer action is needed here.
 
 _Update Loop -> Pause -> Update Loop_:
 
+While an active scene is in the _Update Loop_ state Phaser will call its
+update method and then draw the contents of its display list. It also updates
+all objects being tracked by the physics simulation, processes event listener
+callbacks, and the like.
+
 A scene may be moved from the update loop into a _Paused_ state by calling
 ScenePlugin [pause][sp-pause] and can be moved back via [resume][sp-resume].
 While paused the scene will continue to be rendered but no updates to the
@@ -278,8 +290,8 @@ described above in _-> Create_.
 
 ### Layering
 
-When a **Scene A** is layered above **Scene B** anything drawn to A will be
-drawn on top of the contents of B. Layering can be controled by calling
+When **Scene A** is layered above **Scene B** anything drawn to A will be
+displayed above of the contents of B. Layering can be controled by calling
 well-named methods: [bringToTop][btt], [sendToBack][stb], [moveUp][mu],
 [moveDown][md], [moveAbove][ma], and [moveBelow][mb].
 
@@ -302,10 +314,10 @@ I'm guessing will be the most common.
 #### The Data Registry
 
 The `registry` attribute in your scene offers access to a globally shared
-[DataManager][dm]. One of its key features is that you can subscribe to
-events when the data that it stores is changed and, since it's shared, it's
-trivially easy to build an ersatz scene-to-scene communication system. In
-practice this would look something like:
+[DataManager][dm]. One of its key features is that an event is emitted when
+the data it stores is changed. Additionally, since it's shared, it's trivially
+easy to build an ersatz scene-to-scene communication system. In practice this
+would look something like:
 
 ```javascript
 // In SceneA
@@ -357,7 +369,7 @@ settings(newValue) {
 This approach is certainly not bad and it allows for connecting multiple scenes
 with minimal hassle. My primary complaints are:
 
-- it relies on a global state; the problem here is twofold: that state is
+- it relies on a global state. The problem here is twofold: that state is
   mutable by any reader and mutation on any key results in your handler needing
   to run and check if you got an event you care about
 - if you decide that you want to use a type system like [Flow][flow] or
@@ -375,24 +387,29 @@ registry my least favorite solution for signaling.
 
 #### Function Calls
 
-A scene is just object which means you can call methods that have been defined
-on it. As a result simply calling functions is a viable way for scenes to
-communicate.
+Since a scene is just object you can call methods that have been defined on
+it. As a result, simply calling functions is a viable way for scenes to
+communicate. The only trick is that you need to a reference to your scene
+but that's easily acquired with [`ScenePlugin#get`][sp-get].
+
+[sp-get]: https://photonstorm.github.io/phaser3-docs/Phaser.Scenes.ScenePlugin.html#get
+
+All together, scene to scene function calls is similar to:
 
 ```javascript
 // In SceneA
 
 create() {
   // ...
+  const sceneB = this.scene.get('SceneB')
+
   pauseButton.on('pointerdown', function() {
     pauseButton.toggle()
-    const sceneB = this.scene.get('SceneB')
     sceneB.pause(pauseButton.value())
   })
 
   settingsButton.on('pointerdown', function() {
     settingsButton.toggle()
-    const sceneB = this.scene.get('SceneB')
     sceneB.settings(settingsButton.value())
   })
 }
@@ -408,12 +425,12 @@ settings(newValue) {
 }
 ```
 
-Using functions we can directly tie an actions to its implementations. It's
+Using functions we can directly tie an action to its implementation. It's
 easier to trace code and in the event we want to switch to a typesafe
-javascript stack there are fewer tricks that need to be accomplished to do so.
+javascript stack we'll need fewer tricks to do it.
 
 A downside here is that we've now tightly coupled our scenes together and
-changes in one may require corresponding updates in other, non obvious, places.
+changes in one may require corresponding updates to other, non obvious, places.
 Without tooling in place to catch this it's entirely possible that a "simple"
 refactor to clean up your UI scene could totally break your game and it
 wouldn't be obvious until you tried to test that action.
@@ -460,37 +477,56 @@ settings(newValue) {
 }
 ```
 
-As with all use of signals using them for scene coordination can eaisly create
-a codebase that obscures the link between two bits of code and special care
-should be taken that reliance on them doesn't create an untraceable mess.
+As with all use of signals relying on them for scene coordination can eaisly
+create a codebase that obscures the link between two bits of code and special
+care should be taken that you don't create an untraceable mess.
 
 #### Summary
 
-In general I start working with signals and fall back to functions if I feel
-that there should be a more obvious link between my scenes. That said, none of
-these options are the right solution for all cases so it's important to
-understand how they work to help make the best call for your game.
+In general I start working with scene signals and fall back to functions if I
+feel that there should be a more obvious link between my scenes. That said,
+none of these options are the right solution for all cases so it's important
+to understand how they work to help make the best call for your game.
 
 ## Additional Reading
 
 In delving into Phaser3 I've gone through a bunch of code and other guides.
 The inspiration for the content here comes largely from how I wish that
-information had been presented to me. To that end it feels important to
-acknowledge the authors who also did a bunch of heavy lifting:
+information had been presented to me.
 
-- [Just the Basics](https://gamedevacademy.org/phaser-3-tutorial/)&mdash;
-  For a basic introduction to Phaser and Scenes you should probably start here.
-  The state diagram they include is sufficient for what it is but mostly drove
-  me to build the one in this doc.
-- Newsletter Deep Dive [part 1](https://madmimi.com/p/a2dddb) and
+To that end it feels important to acknowledge other authors who did a bunch
+of heavy lifting:
+
+- [How to Create a Game with Phaser 3][game-how]&mdash; For a basic
+  introduction to Phaser and Scenes you should probably start here. The state
+  diagram they include is sufficient for what it is but mostly drove me to make
+  the one in this doc.
+- Phaser.io newsletter [part 1](https://madmimi.com/p/a2dddb) and
   [part 2](https://madmimi.com/p/860f1c)&mdash;Everything I didn't learn from
   staring at code came from these two guides. They go into significantly more
   detail than I do about scene setup, customization, and less often used
   features. My goal was explicitly to provide something more approachable than
-  these but less basic than most of the existing guides.
+  these and more detailed than the intro guides.
 - The API Docs (for that unstructured learning experience)
   - [Scene](https://photonstorm.github.io/phaser3-docs/Phaser.Scene.html)
   - [Scenes.SceneManager](https://photonstorm.github.io/phaser3-docs/Phaser.Scenes.SceneManager.html)
   - [Scenes.Systems](https://photonstorm.github.io/phaser3-docs/Phaser.Scenes.Systems.html)
   - And more!
 
+[game-how]: https://gamedevacademy.org/phaser-3-tutorial/
+
+## Where to find help
+
+I, and many others, hang out on the [Phaser discord][discord] and are happy to
+answer questions there. There is also a [slack channel][slack], and a
+[forum][forum].
+
+Finally, as mentioned above, a lot of great information can be found in the
+[newsletters][news] so make sure to subscribe. We have the (kinda raw/ugly)
+start of a serachable list of things they have covered [here][news-toc].
+
+[discord]: https://discord.gg/phaser
+[slack]: https://phaser.io/community/slack
+[forum]: https://phaser.io/community/forum
+[news]: https://phaser.io/community/newsletter
+[news-toc]: https://github.com/phaser-discord/community/blob/master/Newsletter%20TOC.yaml
