@@ -499,14 +499,13 @@ of heavy lifting:
 
 - [How to Create a Game with Phaser 3][game-how]&mdash; For a basic
   introduction to Phaser and Scenes you should probably start here. The state
-  diagram they include is sufficient for what it is but mostly drove me to make
-  the one in this doc.
+  diagram they include is what made me realize that I wanted the one included
+  in this doc.
 - Phaser.io newsletter [part 1](https://madmimi.com/p/a2dddb) and
   [part 2](https://madmimi.com/p/860f1c)&mdash;Everything I didn't learn from
   staring at code came from these two guides. They go into significantly more
   detail than I do about scene setup, customization, and less often used
-  features. My goal was explicitly to provide something more approachable than
-  these and more detailed than the intro guides.
+  features.
 - The API Docs (for that unstructured learning experience)
   - [Scene](https://photonstorm.github.io/phaser3-docs/Phaser.Scene.html)
   - [Scenes.SceneManager](https://photonstorm.github.io/phaser3-docs/Phaser.Scenes.SceneManager.html)
