@@ -59,3 +59,17 @@ functionality within the project. For Phaser games that means I start with:
 Having a consistent approach to identifying where some code or asset should
 live doesn't magically improve your code. Bugs still happen and code is still
 messy but it does remove some of the load of navigating your codebase.
+
+## Where to find help
+
+I, and many others, hang out on the [Phaser discord][discord] and are happy to
+answer questions there. There is also a [slack channel][slack], and a
+[forum][forum]. You can (and should!) also subscribe to [the newsletter][news]
+which is often full of useful reading about how Phaser's internals work and
+pointers to neat tutorials. Back issues cane be found [here][news-backissues].
+
+[discord]: https://discord.gg/phaser
+[slack]: https://phaser.io/community/slack
+[forum]: https://phaser.io/community/forum
+[news]: https://phaser.io/community/newsletter
+[news-backissues]: https://phaser.io/community/backissues
