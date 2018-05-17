@@ -490,7 +490,7 @@ to understand how they work to help make the best call for your game.
 
 ## Additional Reading
 
-In delving into Phaser3 I've gone through a bunch of code and other guides.
+In delving into Phaser 3 I've gone through a bunch of code and other guides.
 The inspiration for the content here comes largely from how I wish that
 information had been presented to me.
 
