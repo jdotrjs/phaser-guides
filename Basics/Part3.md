@@ -511,8 +511,11 @@ of heavy lifting:
   - [Scenes.SceneManager](https://photonstorm.github.io/phaser3-docs/Phaser.Scenes.SceneManager.html)
   - [Scenes.Systems](https://photonstorm.github.io/phaser3-docs/Phaser.Scenes.Systems.html)
   - And more!
+- [Scenes summary][samme-summary]&mdash;This is a good reference / more complete
+  summary of the scene state transitions / scene manager interactions
 
 [game-how]: https://gamedevacademy.org/phaser-3-tutorial/
+[samme-summary]: https://gist.github.com/samme/01a33324a427f626254c1a4da7f9b6a3
 
 ## Where to find help
 
