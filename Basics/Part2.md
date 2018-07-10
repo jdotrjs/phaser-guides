@@ -1,10 +1,20 @@
 # Phaser 3 Series: Dev 102 (part 2)
 
 Game development, with or without Phaser, shares much in common with general
-software development. As such many of the lessons / tools you've gained in one
-can be used to improve the quality of your work. This guide summarizes
+software development. As such many of the lessons / tools you've practiced in
+one field can be used to improve the quality of your work in the other. This
+article summarizes broadly applicable guidelines that I've collected over the
+years working in complex code bases and have found helpful.
+
+Hopefully you'll find them a good basis on which to build extensible, clear,
+and bug free games.
 
 ## Principle: Use Supportive Tools
+
+- eslint
+- types
+- tests
+-
 
 ## Principle: Rule of Three
 
