@@ -11,6 +11,8 @@ and bug free games.
 
 ## Principle: Use Supportive Tools
 
+A good carpenter can make do with a bad toolset but
+
 - eslint
 - types
 - tests
