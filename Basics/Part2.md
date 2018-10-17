@@ -13,10 +13,12 @@ and bug free games.
 
 A good carpenter can make do with a bad toolset but
 
+- yarn
+- jsdoc
 - eslint
 - types
 - tests
--
+- babel
 
 ## Principle: Rule of Three
 
